@@ -1,0 +1,69 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  profile   UserProfile?
+  searches  SearchSession[]
+}
+
+model UserProfile {
+  id             String @id @default(uuid())
+  userId         String @unique
+  businessType   String
+  targetAudience String
+  location       String
+  services       String
+  notes          String?
+
+  user           User   @relation(fields: [userId], references: [id])
+}
+
+model SearchSession {
+  id        String   @id @default(uuid())
+  userId    String
+  status    String   // 'pending', 'processing', 'completed', 'failed'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user      User     @relation(fields: [userId], references: [id])
+  leads     Lead[]
+}
+
+model Lead {
+  id                   String   @id @default(uuid())
+  searchSessionId      String
+  businessName         String
+  location             String
+  rating               Float?
+  reviewCount          Int?
+  websiteUrl           String?
+  opportunityScore     Int?
+  aiReasoning          String?
+  conversionLikelihood String? // e.g., 'High', 'Medium', 'Low'
+  createdAt            DateTime @default(now())
+  
+  actions              LeadAction[]
+
+  searchSession        SearchSession @relation(fields: [searchSessionId], references: [id])
+}
+
+model LeadAction {
+  id        String   @id @default(uuid())
+  leadId    String
+  action    String   // e.g., 'contacted', 'skipped', 'note_added'
+  note      String?
+  createdAt DateTime @default(now())
+
+  lead      Lead     @relation(fields: [leadId], references: [id])
+}
